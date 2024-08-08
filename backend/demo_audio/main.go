@@ -15,6 +15,8 @@ import (
 const sampleRate = 16000
 const framesPerBuffer = 64
 
+var finalTranscript, delta string
+
 func main() {
 	err := portaudio.Initialize()
 	if err != nil {
@@ -84,6 +86,7 @@ func speech2Text(audio chan []byte) {
 					SampleRateHertz: sampleRate,
 					LanguageCode:    "ja-JP",
 				},
+				InterimResults: true,
 			},
 		},
 	}); err != nil {
@@ -125,7 +128,13 @@ func speech2Text(audio chan []byte) {
 			log.Fatalf("Could not recognize: %v", err)
 		}
 		for _, result := range resp.Results {
-			fmt.Printf("Result: %+v\n", result)
+			if result.IsFinal {
+				finalTranscript = fmt.Sprintf("%s%s\n", finalTranscript, result.Alternatives[0].Transcript)
+				delta = ""
+			} else if len(result.Alternatives[0].Transcript) > len(delta) {
+				delta = result.Alternatives[0].Transcript
+				fmt.Println("Transcript: ", finalTranscript+delta)
+			}
 		}
 	}
 }
