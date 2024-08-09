@@ -12,8 +12,10 @@ import (
 	"os/signal"
 )
 
-const sampleRate = 44100
+const sampleRate = 16000
 const framesPerBuffer = 64
+
+var finalTranscript, delta string
 
 func main() {
 	err := portaudio.Initialize()
@@ -40,26 +42,22 @@ func main() {
 
 	fmt.Println("Recording. Press Ctrl+C to stop.")
 
-	chanStream := make(chan []byte)
-	go func() {
-		for {
-			select {
-			case <-sig:
-				fmt.Println("\nStopping.")
-				return
-			default:
-				err := stream.Read()
-				if err != nil {
-					log.Fatalf("Error reading from stream: %v", err)
-				}
-				fmt.Println("Audio data:", in)
-				chanStream <- int16SliceToByteSlice(in)
+	dataStream := make(chan []byte, 1024)
+	go speech2Text(dataStream)
+	for {
+		select {
+		case <-sig:
+			fmt.Println("\nStopping.")
+			return
+		default:
+			err := stream.Read()
+			if err != nil {
+				log.Fatalf("Error reading from stream: %v", err)
 			}
+			dataStream <- int16SliceToByteSlice(in)
 		}
-	}()
-	speech2Text(chanStream)
+	}
 }
-
 func int16SliceToByteSlice(data []int16) []byte {
 	buf := make([]byte, len(data)*2)
 	for i, v := range data {
@@ -85,9 +83,10 @@ func speech2Text(audio chan []byte) {
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{
 					Encoding:        speechpb.RecognitionConfig_LINEAR16,
-					SampleRateHertz: 16000,
+					SampleRateHertz: sampleRate,
 					LanguageCode:    "ja-JP",
 				},
+				InterimResults: true,
 			},
 		},
 	}); err != nil {
@@ -110,7 +109,6 @@ func speech2Text(audio chan []byte) {
 					log.Printf("Could not send audio: %v", err)
 				}
 			}
-			log.Println("Sent audio chunk")
 		}
 	}()
 
@@ -130,7 +128,13 @@ func speech2Text(audio chan []byte) {
 			log.Fatalf("Could not recognize: %v", err)
 		}
 		for _, result := range resp.Results {
-			fmt.Printf("Result: %+v\n", result)
+			if result.IsFinal {
+				finalTranscript = fmt.Sprintf("%s%s\n", finalTranscript, result.Alternatives[0].Transcript)
+				delta = ""
+			} else if len(result.Alternatives[0].Transcript) > len(delta) {
+				delta = result.Alternatives[0].Transcript
+				fmt.Println("Transcript: ", finalTranscript+delta)
+			}
 		}
 	}
 }
