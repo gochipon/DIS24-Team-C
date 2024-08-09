@@ -7,6 +7,7 @@ import (
 	"github.com/gochipon/DIS24-Team-C/backend/pkg/uc"
 	"log"
 	"strconv"
+	"sync"
 )
 
 type PineconeSearchHandler struct {
@@ -46,34 +47,40 @@ func (p *PineconeSearchHandler) Search() gin.HandlerFunc {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		resp := make([]schema.SearchEntry, 0, len(exec))
-		for _, result := range exec {
-			var out schema.SearchEntry
-			switch result.StreamName {
-			case "issue":
-				iid, _ := strconv.ParseInt(result.ID, 10, 64)
-				issue, err := p.issueUC.Exec(repository, iid)
-				if err != nil {
-					log.Printf("failed to get issue, %s %d: %v", repository, iid, err)
-					continue
+		resp := make([]schema.SearchEntry, len(exec))
+		wg := sync.WaitGroup{}
+		for i, result := range exec {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				var out schema.SearchEntry
+				switch result.StreamName {
+				case "issue":
+					iid, _ := strconv.ParseInt(result.ID, 10, 64)
+					issue, err := p.issueUC.Exec(repository, iid)
+					if err != nil {
+						log.Printf("failed to get issue, %s %d: %v", repository, iid, err)
+						return
+					}
+					out.Content = issue
+					out.Type = "issue"
+				case "pull":
+					pid, _ := strconv.ParseInt(result.ID, 10, 64)
+					pull, err := p.pullUC.Exec(repository, pid)
+					if err != nil {
+						log.Printf("failed to get pull request, %s %d: %v", repository, pid, err)
+						return
+					}
+					out.Content = pull
+					out.Type = "pull"
+				default:
+					log.Printf("unknown stream: %s", result.StreamName)
 				}
-				out.Content = issue
-				out.Type = "issue"
-			case "pull":
-				pid, _ := strconv.ParseInt(result.ID, 10, 64)
-				pull, err := p.pullUC.Exec(repository, pid)
-				if err != nil {
-					log.Printf("failed to get pull request, %s %d: %v", repository, pid, err)
-					continue
-				}
-				out.Content = pull
-				out.Type = "pull"
-			default:
-				log.Printf("unknown stream: %s", result.StreamName)
-			}
-			out.Score = result.Score
-			resp = append(resp, out)
+				out.Score = result.Score
+				resp[i] = out
+			}(i)
 		}
+		wg.Wait()
 		c.JSON(200, resp)
 		return
 	}
