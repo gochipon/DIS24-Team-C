@@ -20,7 +20,7 @@ var C *Config
 
 func init() {
 	godotenv.Load()
-	config = &Config{
+	C = &Config{
 		DBHost:        getEnv("DB_HOST"),
 		DBPort:        getEnv("DB_PORT"),
 		DBUser:        getEnv("DB_USER"),
