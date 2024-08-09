@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	pull := uc.NewPullRequestHandler(db)
+	pull := uc.NewQueryPullUC(db)
 	exec, err := pull.Exec("golang/go", 47237)
 	if err != nil {
 		fmt.Println(err)

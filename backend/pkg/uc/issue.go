@@ -6,18 +6,18 @@ import (
 	"github.com/gochipon/DIS24-Team-C/backend/pkg/model"
 )
 
-type IssueHandler struct {
+type QueryIssueUC struct {
 	DB *sql.DB
 }
 
-func NewIssueHandler(db *sql.DB) *IssueHandler {
-	return &IssueHandler{
+func NewQueryIssueUC(db *sql.DB) *QueryIssueUC {
+	return &QueryIssueUC{
 		DB: db,
 	}
 }
 
 // Exec retrieves the IssuePage based on the provided issue ID
-func (handler *IssueHandler) Exec(repository string, issueID int64) (*model.IssuePage, error) {
+func (handler *QueryIssueUC) Exec(repository string, issueID int64) (*model.IssuePage, error) {
 	// Initialize an empty IssuePage
 	issuePage := &model.IssuePage{}
 

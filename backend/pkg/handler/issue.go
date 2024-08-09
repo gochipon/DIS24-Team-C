@@ -12,14 +12,14 @@ import (
 )
 
 type InfoHandler struct {
-	issueHandler *uc.IssueHandler
-	pullHandler  *uc.PullRequestHandler
+	issueHandler *uc.QueryIssueUC
+	pullHandler  *uc.QueryPullUC
 }
 
 func NewInfoHandler(db *sql.DB) *InfoHandler {
 	return &InfoHandler{
-		issueHandler: uc.NewIssueHandler(db),
-		pullHandler:  uc.NewPullRequestHandler(db),
+		issueHandler: uc.NewQueryIssueUC(db),
+		pullHandler:  uc.NewQueryPullUC(db),
 	}
 }
 

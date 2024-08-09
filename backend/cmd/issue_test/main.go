@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	issue := uc.NewIssueHandler(db)
+	issue := uc.NewQueryIssueUC(db)
 	exec, err := issue.Exec("golang/go", 47233)
 	if err != nil {
 		fmt.Println(err)

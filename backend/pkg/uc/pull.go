@@ -7,20 +7,20 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
-// PullRequestHandler handles the retrieval of PullRequestPage data from the database
-type PullRequestHandler struct {
+// QueryPullUC handles the retrieval of PullRequestPage data from the database
+type QueryPullUC struct {
 	DB *sql.DB
 }
 
-// NewPullRequestHandler creates a new PullRequestHandler
-func NewPullRequestHandler(db *sql.DB) *PullRequestHandler {
-	return &PullRequestHandler{
+// NewQueryPullUC creates a new QueryPullUC
+func NewQueryPullUC(db *sql.DB) *QueryPullUC {
+	return &QueryPullUC{
 		DB: db,
 	}
 }
 
 // Exec retrieves the PullRequestPage based on the provided pull request ID
-func (handler *PullRequestHandler) Exec(repository string, pullRequestID int64) (*model.PullRequestPage, error) {
+func (handler *QueryPullUC) Exec(repository string, pullRequestID int64) (*model.PullRequestPage, error) {
 	// Initialize an empty PullRequestPage
 	pullRequestPage := &model.PullRequestPage{}
 
