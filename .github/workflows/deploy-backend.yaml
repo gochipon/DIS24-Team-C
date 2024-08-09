@@ -22,7 +22,7 @@ jobs:
         with:
           token_format: access_token
           workload_identity_provider: 'projects/564681672443/locations/global/workloadIdentityPools/default/providers/provider-github'
-          service_account: 'gh-action@reazon-hackathon-c.iam.gserviceaccount.com'
+          service_account: 'gh-actions@reazon-hackathon-c.iam.gserviceaccount.com'
 
       - name: Set up Cloud SDK
         uses: 'google-github-actions/setup-gcloud@v2'
