@@ -43,6 +43,7 @@ func (p *PineconeSearchHandler) Search() gin.HandlerFunc {
 		}
 		exec, err := p.pcUC.Exec(repository, req.Query)
 		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 		resp := make([]schema.SearchEntry, 0, len(exec))
@@ -53,24 +54,27 @@ func (p *PineconeSearchHandler) Search() gin.HandlerFunc {
 				iid, _ := strconv.ParseInt(result.ID, 10, 64)
 				issue, err := p.issueUC.Exec(repository, iid)
 				if err != nil {
-					log.Printf("failed to get issue: %v", err)
+					log.Printf("failed to get issue, %s %d: %v", repository, iid, err)
 					continue
 				}
 				out.Content = issue
 				out.Type = "issue"
-			case "pull_request":
+			case "pull":
 				pid, _ := strconv.ParseInt(result.ID, 10, 64)
 				pull, err := p.pullUC.Exec(repository, pid)
 				if err != nil {
-					log.Printf("failed to get pull request: %v", err)
+					log.Printf("failed to get pull request, %s %d: %v", repository, pid, err)
 					continue
 				}
 				out.Content = pull
 				out.Type = "pull"
+			default:
+				log.Printf("unknown stream: %s", result.StreamName)
 			}
 			out.Score = result.Score
 			resp = append(resp, out)
 		}
 		c.JSON(200, resp)
+		return
 	}
 }

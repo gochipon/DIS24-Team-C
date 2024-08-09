@@ -89,19 +89,19 @@ func (uc PineconeTopKUseCase) Exec(repository, query string) ([]SearchResult, er
 
 		switch stream {
 		case "releases":
-			info.StreamName = "releases"
+			info.StreamName = "release"
 			info.ID = meta["name"].(string)
 		case "comments":
-			info.StreamName = "issues"
+			info.StreamName = "issue"
 			info.ID = getLastPartOfURL(meta["issue_url"].(string))
 		case "issues":
-			info.StreamName = "issues"
+			info.StreamName = "issue"
 			info.ID = fmt.Sprintf("%v", meta["number"])
 		case "pull_requests":
-			info.StreamName = "pull_requests"
+			info.StreamName = "pull"
 			info.ID = fmt.Sprintf("%v", meta["number"])
 		case "review_comments":
-			info.StreamName = "pull_requests"
+			info.StreamName = "pull"
 			info.ID = getLastPartOfURL(meta["pull_request_url"].(string))
 		default:
 			fmt.Println("Unknown stream:", stream)
