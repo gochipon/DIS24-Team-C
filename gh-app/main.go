@@ -24,7 +24,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "GH_APP_CLIENT_SECRET is not set", http.StatusInternalServerError)
 		return
 	}
-	payload, err := github.ValidatePayload(r, []byte("your-secret-token"))
+	payload, err := github.ValidatePayload(r, []byte(token))
 	if err != nil {
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
 		return
