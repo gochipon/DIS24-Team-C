@@ -170,12 +170,16 @@ func convertPullRequestModelToSchema(pr model.PullRequest, reviews []model.Revie
 		if err := json.Unmarshal(reviewComment.User, &reviewCommentUser); err != nil {
 			return schema.PullRequestResponse{}, err
 		}
+		var pos int64
+		if reviewComment.Position != nil {
+			pos = *reviewComment.Position
+		}
 		reviewCommentList = append(reviewCommentList, schema.ReviewCommentResponse{
 			ID:        reviewComment.ID,
 			Author:    reviewCommentUser["login"].(string),
 			Body:      reviewComment.Body,
 			Path:      reviewComment.Path,
-			Position:  reviewComment.Position,
+			Position:  pos,
 			CreatedAt: reviewComment.CreatedAt,
 			UpdatedAt: reviewComment.UpdatedAt,
 		})
