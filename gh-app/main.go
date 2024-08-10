@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v55/github"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
@@ -10,6 +11,8 @@ import (
 	"net/http"
 	"os"
 )
+
+var ghClient *github.Client
 
 func main() {
 	godotenv.Load()
@@ -96,4 +99,14 @@ func handlePullRequestEvent(ctx context.Context, client *github.Client, event *g
 			log.Printf("Error creating comment: %v", err)
 		}
 	}
+}
+
+func init() {
+	tr := http.DefaultTransport
+	itr, err := ghinstallation.NewKeyFromFile(tr, 966655, 53652978, "./secret.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ghClient = github.NewClient(&http.Client{Transport: itr})
 }
