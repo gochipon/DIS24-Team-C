@@ -77,30 +77,30 @@ type ReviewComment struct {
 	ID                  int64           `json:"id"`
 	URL                 string          `json:"url"`
 	Body                string          `json:"body"`
-	Line                int64           `json:"line"`
+	Line                *int64          `json:"line"`
 	Path                string          `json:"path"`
 	Side                string          `json:"side"`
 	User                json.RawMessage `json:"user"`
 	Links               json.RawMessage `json:"_links"`
 	NodeID              string          `json:"node_id"`
 	HTMLURL             string          `json:"html_url"`
-	Position            int64           `json:"position"`
+	Position            *int64          `json:"position"`
 	CommitID            string          `json:"commit_id"`
 	DiffHunk            string          `json:"diff_hunk"`
 	Reactions           json.RawMessage `json:"reactions"`
 	CreatedAt           time.Time       `json:"created_at"`
 	Repository          string          `json:"repository"`
-	StartLine           int64           `json:"start_line"`
-	StartSide           string          `json:"start_side"`
+	StartLine           *int64          `json:"start_line"`
+	StartSide           *string         `json:"start_side"`
 	UpdatedAt           time.Time       `json:"updated_at"`
 	SubjectType         string          `json:"subject_type"`
 	OriginalLine        int64           `json:"original_line"`
-	InReplyToID         int64           `json:"in_reply_to_id"`
+	InReplyToID         *int64          `json:"in_reply_to_id"`
 	PullRequestURL      string          `json:"pull_request_url"`
 	OriginalPosition    int64           `json:"original_position"`
 	AuthorAssociation   string          `json:"author_association"`
 	OriginalCommitID    string          `json:"original_commit_id"`
-	OriginalStartLine   int64           `json:"original_start_line"`
+	OriginalStartLine   *int64          `json:"original_start_line"`
 	PullRequestReviewID int64           `json:"pull_request_review_id"`
 	AirbyteRawID        string          `json:"_airbyte_raw_id"`
 	AirbyteExtractedAt  time.Time       `json:"_airbyte_extracted_at"`

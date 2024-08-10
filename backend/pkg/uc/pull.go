@@ -87,7 +87,7 @@ func (handler *QueryPullUC) Exec(repository string, pullRequestID int64) (*model
                updated_at, submitted_at, pull_request_url, author_association, 
                _airbyte_raw_id, _airbyte_extracted_at, _airbyte_generation_id, _airbyte_meta
         FROM reviews
-        WHERE pull_request_url = $1`, pullRequestPage.PullRequest.HTMLURL)
+        WHERE html_url LIKE $1`, pullRequestPage.PullRequest.HTMLURL+"#%")
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve reviews: %v", err)
 	}
@@ -132,7 +132,7 @@ func (handler *QueryPullUC) Exec(repository string, pullRequestID int64) (*model
                original_commit_id, original_start_line, pull_request_review_id, 
                _airbyte_raw_id, _airbyte_extracted_at, _airbyte_generation_id, _airbyte_meta
         FROM review_comments
-        WHERE pull_request_url = $1`, pullRequestPage.PullRequest.HTMLURL)
+        WHERE html_url LIKE $1`, pullRequestPage.PullRequest.HTMLURL+"#%")
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve review comments: %v", err)
 	}

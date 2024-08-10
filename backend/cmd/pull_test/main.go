@@ -24,11 +24,13 @@ func main() {
 	}
 	defer db.Close()
 	pull := uc.NewQueryPullUC(db)
-	exec, err := pull.Exec("golang/go", 47237)
+	exec, err := pull.Exec("cli/cli", 549)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println((*exec).PullRequest.Title)
 	fmt.Println((*exec).PullRequest.Body)
+	fmt.Println((*exec).Reviews)
+	fmt.Println((*exec).ReviewComments)
 }
