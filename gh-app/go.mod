@@ -1,6 +1,6 @@
 module github.com/gochipon/DIS24-Team-C/gh-app
 
-go 1.23rc1
+go 1.22
 
 require (
 	github.com/google/go-github/v55 v55.0.0
