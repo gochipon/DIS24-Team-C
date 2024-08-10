@@ -6,6 +6,7 @@ import (
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v55/github"
 	"github.com/joho/godotenv"
+	"github.com/sashabaranov/go-openai"
 	"io"
 	"log"
 	"net/http"
@@ -13,10 +14,12 @@ import (
 )
 
 var ghClient *github.Client
+var gptUC *IssueCheck
 
 func main() {
 	godotenv.Load()
-
+	openaiClient := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	gptUC = NewIssueCheck(*openaiClient)
 	http.HandleFunc("/webhook", handleWebhook)
 	log.Println("Server is listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -56,40 +59,58 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIssuesEvent(ctx context.Context, client *github.Client, event *github.IssuesEvent) {
+	flag := gptUC.CheckIssue(*event.Issue.Title, *event.Issue.Body)
+	var comment *github.IssueComment
+	var label string
+	switch flag {
+	case ResultOK:
+		label = "Ready"
+		comment = &github.IssueComment{Body: github.String("Issueを投稿頂きありがとうございます!\n**Issueの内容基準を満たしました🥳**\nMaintainerからの返信をお待ちください")}
+	case ResultNG:
+		label = "Needs Clarification"
+		feedback, err := gptUC.ProvideFeedback(*event.Issue.Title, *event.Issue.Body)
+		if err != nil {
+			log.Printf("Error providing feedback: %v", err)
+			feedback = "エラーが発生しました。"
+		}
+		comment = &github.IssueComment{Body: github.String("Issueを投稿頂きありがとうございます!\n**Issueに不明瞭な点があるようです??**\nIssueの内容を見直して明瞭にしてください🙇\n\n" +
+			"以下、自動生成されたアドバイスです。\n```\n" + feedback + "\n```\n")}
+	case ResultSpam:
+		label = "Spam"
+		comment = &github.IssueComment{Body: github.String("Issueを投稿頂きありがとうございます!\n**Issueがスパムと判断されました🚫**\n" +
+			"# 何も編集がない場合、1時間後にこのIssueは自動的にCloseされます。\n\nスパムでない場合は、再度説明文を修正してください。")}
+	}
 	switch *event.Action {
 	case "opened":
-		comment := &github.IssueComment{Body: github.String("ありがとう!")}
 		_, _, err := client.Issues.CreateComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.Issue.Number, comment)
 		if err != nil {
 			log.Printf("Error creating comment: %v", err)
 		}
-
+		client.Issues.ReplaceLabelsForIssue(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.Issue.Number, []string{label})
 	case "edited":
 		comments, _, err := client.Issues.ListComments(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.Issue.Number, nil)
 		if err != nil {
 			log.Printf("Error listing comments: %v", err)
 			return
 		}
-
-		for _, comment := range comments {
-			fmt.Printf("%+v\n", comment)
-			if comment == nil {
+		client.Issues.ReplaceLabelsForIssue(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.Issue.Number, []string{label})
+		for _, cmt := range comments {
+			fmt.Printf("%+v\n", cmt)
+			if cmt == nil {
 				continue
 			}
-			if comment.User == nil {
-				fmt.Println("comment.User is nil")
-				fmt.Println(comment)
+			if cmt.User == nil {
+				fmt.Println("cmt.User is nil")
+				fmt.Println(cmt)
 				continue
 			}
-			if *comment.User.Type == "Bot" {
-				newBody := "編集内容を確認しました!"
-				_, _, err := client.Issues.EditComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *comment.ID, &github.IssueComment{Body: &newBody})
+			if *cmt.User.Type == "Bot" {
+				_, _, err := client.Issues.EditComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *cmt.ID, comment)
 				if err != nil {
-					log.Printf("Error editing comment: %v", err)
+					log.Printf("Error editing cmt: %v", err)
 				}
 				break
 			}
-			log.Printf("%+v", comment)
 		}
 	}
 }
