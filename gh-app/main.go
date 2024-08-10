@@ -5,6 +5,7 @@ import (
 	"github.com/google/go-github/v55/github"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -24,10 +25,10 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "GH_APP_CLIENT_SECRET is not set", http.StatusInternalServerError)
 		return
 	}
-	payload, err := github.ValidatePayload(r, []byte(token))
+	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Failed to validate payload: %v", err)
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		log.Printf("Failed to read request body: %v", err)
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
 
