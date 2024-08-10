@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v55/github"
 	"github.com/joho/godotenv"
-	"golang.org/x/oauth2"
 	"io"
 	"log"
 	"net/http"
@@ -43,17 +43,11 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
 	switch e := event.(type) {
 	case *github.IssuesEvent:
-		handleIssuesEvent(ctx, client, e)
+		handleIssuesEvent(ctx, ghClient, e)
 	case *github.PullRequestEvent:
-		handlePullRequestEvent(ctx, client, e)
+		handlePullRequestEvent(ctx, ghClient, e)
 	default:
 		log.Printf("Unhandled event type: %s", github.WebHookType(r))
 	}
@@ -78,6 +72,20 @@ func handleIssuesEvent(ctx context.Context, client *github.Client, event *github
 		}
 
 		for _, comment := range comments {
+			fmt.Printf("%+v\n", comment)
+			if comment == nil {
+				continue
+			}
+			if comment.User == nil {
+				fmt.Println("comment.User is nil")
+				fmt.Println(comment)
+				continue
+			}
+			if comment.User.Name == nil {
+				fmt.Println("comment.User.Name is nil")
+				fmt.Println(comment)
+				continue
+			}
 			if *comment.User.Name == "OSSAssistant" {
 				newBody := "編集内容を確認しました!"
 				_, _, err := client.Issues.EditComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *comment.ID, &github.IssueComment{Body: &newBody})
