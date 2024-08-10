@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gochipon/DIS24-Team-C/backend/pkg/schema"
 	"github.com/gochipon/DIS24-Team-C/backend/pkg/uc"
@@ -11,16 +12,18 @@ import (
 )
 
 type PineconeSearchHandler struct {
-	pcUC    *uc.PineconeTopKUseCase
-	issueUC *uc.QueryIssueUC
-	pullUC  *uc.QueryPullUC
+	pcUC      *uc.PineconeTopKUseCase
+	issueUC   *uc.QueryIssueUC
+	pullUC    *uc.QueryPullUC
+	summaryUC *uc.SummarizeUseCase
 }
 
 func NewPineconeSearchHandler(db *sql.DB) *PineconeSearchHandler {
 	return &PineconeSearchHandler{
-		issueUC: uc.NewQueryIssueUC(db),
-		pullUC:  uc.NewQueryPullUC(db),
-		pcUC:    uc.NewPineconeTopKUseCase(),
+		issueUC:   uc.NewQueryIssueUC(db),
+		pullUC:    uc.NewQueryPullUC(db),
+		pcUC:      uc.NewPineconeTopKUseCase(),
+		summaryUC: uc.NewSummarizeUseCase(),
 	}
 }
 
@@ -54,6 +57,7 @@ func (p *PineconeSearchHandler) Search() gin.HandlerFunc {
 			go func(i int) {
 				defer wg.Done()
 				var out schema.SearchEntry
+				var fullContent string
 				switch result.StreamName {
 				case "issue":
 					iid, _ := strconv.ParseInt(result.ID, 10, 64)
@@ -64,6 +68,11 @@ func (p *PineconeSearchHandler) Search() gin.HandlerFunc {
 					}
 					out.Content = issue
 					out.Type = "issue"
+					var fullComments string
+					for _, comment := range issue.Comments {
+						fullComments += fmt.Sprintf("Author: %s\n\nBody: %s\n\n", comment.User, comment.Body)
+					}
+					fullContent = fmt.Sprintf("Title: %s\n\nBody: %s\n\nComments: %s", issue.Issue.Title, issue.Issue.Body, fullComments)
 				case "pull":
 					pid, _ := strconv.ParseInt(result.ID, 10, 64)
 					pull, err := p.pullUC.Exec(repository, pid)
@@ -73,10 +82,21 @@ func (p *PineconeSearchHandler) Search() gin.HandlerFunc {
 					}
 					out.Content = pull
 					out.Type = "pull"
+					var fullComments string
+					for _, review := range pull.Reviews {
+						fullComments += fmt.Sprintf("---\nAuthor: %s\n\nBody: %s\n\n", review.User, review.Body)
+					}
+					fullContent = fmt.Sprintf("Title: %s\n\nBody: %s\n\nReviews: %s", pull.PullRequest.Title, pull.PullRequest.Body, fullComments)
 				default:
 					log.Printf("unknown stream: %s", result.StreamName)
 				}
 				out.Score = result.Score
+				summary, err := p.summaryUC.Summarize(fullContent)
+				if err != nil {
+					log.Printf("failed to summarize: %v", err)
+					return
+				}
+				out.Summary = summary
 				resp[i] = out
 			}(i)
 		}
