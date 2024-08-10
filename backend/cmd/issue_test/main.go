@@ -24,11 +24,12 @@ func main() {
 	}
 	defer db.Close()
 	issue := uc.NewQueryIssueUC(db)
-	exec, err := issue.Exec("golang/go", 47233)
+	exec, err := issue.Exec("cli/cli", 925)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println((*exec).Issue.Body)
 	fmt.Println((*exec).Issue.Title)
+	fmt.Println((*exec).Issue.Comments)
 }

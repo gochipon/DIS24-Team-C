@@ -78,7 +78,7 @@ func (handler *QueryIssueUC) Exec(repository string, issueID int64) (*model.Issu
                created_at, repository, updated_at, author_association, performed_via_github_app,
                _airbyte_raw_id, _airbyte_extracted_at, _airbyte_generation_id, _airbyte_meta
         FROM comments
-        WHERE issue_url = $1 AND repository = $2`, issuePage.Issue.HTMLURL, repository)
+        WHERE html_url LIKE $1 AND repository = $2`, issuePage.Issue.HTMLURL+"%", repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve comments: %v", err)
 	}

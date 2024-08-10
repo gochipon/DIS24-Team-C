@@ -52,7 +52,7 @@ type Comment struct {
 	Body                  string          `json:"body"`
 	User                  json.RawMessage `json:"user"`
 	NodeID                string          `json:"node_id"`
-	UserID                int64           `json:"user_id"`
+	UserID                *int64          `json:"user_id"`
 	HTMLURL               string          `json:"html_url"`
 	IssueURL              string          `json:"issue_url"`
 	Reactions             json.RawMessage `json:"reactions"`
@@ -60,7 +60,7 @@ type Comment struct {
 	Repository            string          `json:"repository"`
 	UpdatedAt             time.Time       `json:"updated_at"`
 	AuthorAssociation     string          `json:"author_association"`
-	PerformedViaGitHubApp json.RawMessage `json:"performed_via_github_app"`
+	PerformedViaGitHubApp *string         `json:"performed_via_github_app"`
 	AirbyteRawID          string          `json:"_airbyte_raw_id"`
 	AirbyteExtractedAt    time.Time       `json:"_airbyte_extracted_at"`
 	AirbyteGenerationID   int64           `json:"_airbyte_generation_id"`
