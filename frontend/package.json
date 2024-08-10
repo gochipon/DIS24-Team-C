@@ -1,0 +1,24 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@primevue/themes": "^4.0.4",
+    "lodash": "^4.17.21",
+    "nuxt": "^3.12.4",
+    "pg": "^8.12.0",
+    "primevue": "^4.0.4",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@primevue/nuxt-module": "^4.0.4",
+    "@types/pg": "^8.11.6"
+  }
+}
