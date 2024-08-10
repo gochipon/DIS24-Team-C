@@ -66,7 +66,7 @@ func (uc PineconeTopKUseCase) Exec(repository, query string) ([]SearchResult, er
 		ctx,
 		&pinecone.QueryByVectorValuesRequest{
 			Vector:          embeddings,
-			TopK:            4,
+			TopK:            5,
 			MetadataFilter:  newStruct,
 			IncludeMetadata: true,
 		},
