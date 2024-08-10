@@ -26,19 +26,21 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	payload, err := github.ValidatePayload(r, []byte(token))
 	if err != nil {
+		log.Printf("Failed to validate payload: %v", err)
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
 		return
 	}
 
 	event, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
+		log.Printf("Failed to parse webhook: %v", err)
 		http.Error(w, "Failed to parse webhook", http.StatusInternalServerError)
 		return
 	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "your-github-token"},
+		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
