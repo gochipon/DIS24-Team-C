@@ -1,8 +1,8 @@
 <template>
   <div class="dashboard">
-    <Sidebar/>
     <div class="content">
       <TopBar/>
+      <h1>{{org}}/{{repo}}のベクトル検索エンジン</h1>
       <div class="main-content">
         <SearchBox :items="items" @update:query="updateQuery"/>
       </div>
@@ -61,6 +61,9 @@ const updateQuery = async (newQuery: string) => {
 </script>
 
 <style scoped>
+h1 {
+  text-align: center;
+}
 .dashboard {
   display: flex;
   height: 100vh;

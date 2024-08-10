@@ -2,13 +2,14 @@
   <div class="search-box">
     <Textarea v-model="searchQuery" rows="5" placeholder="Search issues and pull requests..."/>
     <Button label="Search" icon="pi pi-search" class="search-button"/>
-
     <div class="result-list">
       <div v-for="(item, index) in props.items as SearchResponse[]" :key="index" class="result-item">
         <template v-if="item.type === 'issue'">
           <div class="item-header">
             <span :class="['item-type', item.type]">issue</span>
-            <a href="#" class="item-title">
+<!--            open in new tab-->
+            <a :href="(item.content as IssueFullResponse).issue.html_url"
+               class="item-title">
               {{ (item.content as IssueFullResponse).issue.title }}
             </a>
           </div>
@@ -19,6 +20,22 @@
               #{{ (item.content as IssueFullResponse).issue.number }}
               <i icon="pi pi-user" :value="getUsername((item.content as IssueFullResponse).issue.user.avatar_url)"/>
               opened by {{ getUsername((item.content as IssueFullResponse).issue.user.html_url) }} &bull; {{ (item.content as IssueFullResponse).issue.comments }} comments
+          </div>
+        </template>
+        <template v-else-if="item.type === 'pull_request'">
+          <div class="item-header">
+            <span :class="['item-type', item.type]">pull request</span>
+            <a :href="(item.content as PullRequestResponse).html_url"
+               class="item-title">
+              {{ (item.content as PullRequestResponse).title }}
+            </a>
+          </div>
+          <div class="item-summary">
+            {{ item.summary }}
+          </div>
+          <div class="item-meta">
+            #{{ (item.content as PullRequestResponse).number }}
+            opened by {{ getUsername((item.content as PullRequestResponse).author) }} &bull; {{ (item.content as PullRequestResponse).comments }} comments
           </div>
         </template>
       </div>
@@ -125,5 +142,11 @@ const getUsername = (htmlUrl: string): string => {
 
 .result-item:hover {
   background-color: #f6f8fa;
+}
+
+textarea{
+  border: black 1px solid;
+  border-radius: 5px;
+  padding: 5px;
 }
 </style>
