@@ -1,0 +1,88 @@
+package main
+
+import (
+	"context"
+	"github.com/google/go-github/v55/github"
+	"github.com/joho/godotenv"
+	"golang.org/x/oauth2"
+	"log"
+	"net/http"
+)
+
+func main() {
+	godotenv.Load()
+
+	http.HandleFunc("/webhook", handleWebhook)
+	log.Println("Server is listening on port 8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func handleWebhook(w http.ResponseWriter, r *http.Request) {
+	payload, err := github.ValidatePayload(r, []byte("your-secret-token"))
+	if err != nil {
+		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	if err != nil {
+		http.Error(w, "Failed to parse webhook", http.StatusInternalServerError)
+		return
+	}
+
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: "your-github-token"},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
+
+	switch e := event.(type) {
+	case *github.IssuesEvent:
+		handleIssuesEvent(ctx, client, e)
+	case *github.PullRequestEvent:
+		handlePullRequestEvent(ctx, client, e)
+	default:
+		log.Printf("Unhandled event type: %s", github.WebHookType(r))
+	}
+}
+
+func handleIssuesEvent(ctx context.Context, client *github.Client, event *github.IssuesEvent) {
+	switch *event.Action {
+	case "opened":
+		comment := &github.IssueComment{Body: github.String("ありがとう!")}
+		_, _, err := client.Issues.CreateComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.Issue.Number, comment)
+		if err != nil {
+			log.Printf("Error creating comment: %v", err)
+		}
+
+	case "edited":
+		comments, _, err := client.Issues.ListComments(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.Issue.Number, nil)
+		if err != nil {
+			log.Printf("Error listing comments: %v", err)
+			return
+		}
+
+		for _, comment := range comments {
+			if *comment.User.Name == "OSSAssistant" {
+				newBody := "編集内容を確認しました!"
+				_, _, err := client.Issues.EditComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *comment.ID, &github.IssueComment{Body: &newBody})
+				if err != nil {
+					log.Printf("Error editing comment: %v", err)
+				}
+				break
+			}
+			log.Printf("%+v", comment)
+		}
+	}
+}
+
+func handlePullRequestEvent(ctx context.Context, client *github.Client, event *github.PullRequestEvent) {
+	if *event.Action == "opened" {
+		comment := &github.IssueComment{Body: github.String("新しいPRを確認しました")}
+		_, _, err := client.Issues.CreateComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *event.PullRequest.Number, comment)
+		if err != nil {
+			log.Printf("Error creating comment: %v", err)
+		}
+	}
+}
