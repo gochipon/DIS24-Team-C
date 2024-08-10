@@ -14,7 +14,6 @@
 import type {IssueResponse} from "~/model/model";
 import type {PullRequestResponse} from "~/model/pull";
 import type {SearchResponse} from "~/model/search";
-// import {debounce} from "lodash";
 
 const route = useRoute()
 const org = route.params.org
@@ -31,18 +30,20 @@ const searchQuery = ref('')
 
 // get current time
 let lastrun = Date.now()
-let running = false
 const updateQuery = async (newQuery: string) => {
   const now = Date.now()
-  if (now - lastrun < 500) {
-    return
-  }
   lastrun = now
-  if (running || newQuery === "") {
+  await (async () => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 500)
+    })
+  })()
+  if (now !== lastrun) {
     return
   }
-  running = true
-  console.log("running")
+  if (newQuery === "") {
+    return
+  }
   const {data, error} = await useFetch<SearchResponse[]>(
       'https://api.github-tracker.dev' + `/api/v1/${org}/${repo}/search`,
       {
@@ -50,7 +51,6 @@ const updateQuery = async (newQuery: string) => {
         body: {query: newQuery}
       }
   )
-  running = false
   if (error.value) {
     console.log(error.value)
     return
