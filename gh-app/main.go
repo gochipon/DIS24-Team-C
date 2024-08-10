@@ -81,12 +81,7 @@ func handleIssuesEvent(ctx context.Context, client *github.Client, event *github
 				fmt.Println(comment)
 				continue
 			}
-			if comment.User.Name == nil {
-				fmt.Println("comment.User.Name is nil")
-				fmt.Println(comment)
-				continue
-			}
-			if *comment.User.Name == "OSSAssistant" {
+			if *comment.User.Type == "Bot" {
 				newBody := "編集内容を確認しました!"
 				_, _, err := client.Issues.EditComment(ctx, *event.Repo.Owner.Login, *event.Repo.Name, *comment.ID, &github.IssueComment{Body: &newBody})
 				if err != nil {
