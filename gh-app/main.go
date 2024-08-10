@@ -7,6 +7,7 @@ import (
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -18,6 +19,11 @@ func main() {
 }
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
+	token := os.Getenv("GH_APP_CLIENT_SECRET")
+	if token == "" {
+		http.Error(w, "GH_APP_CLIENT_SECRET is not set", http.StatusInternalServerError)
+		return
+	}
 	payload, err := github.ValidatePayload(r, []byte("your-secret-token"))
 	if err != nil {
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
@@ -45,6 +51,8 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	default:
 		log.Printf("Unhandled event type: %s", github.WebHookType(r))
 	}
+	//response success
+	w.WriteHeader(http.StatusOK)
 }
 
 func handleIssuesEvent(ctx context.Context, client *github.Client, event *github.IssuesEvent) {
