@@ -103,7 +103,7 @@ func handlePullRequestEvent(ctx context.Context, client *github.Client, event *g
 
 func init() {
 	tr := http.DefaultTransport
-	itr, err := ghinstallation.NewKeyFromFile(tr, 966655, 53652978, "./secret.pem")
+	itr, err := ghinstallation.NewKeyFromFile(tr, 966655, 53652978, "/app/credential/secret.pem")
 	if err != nil {
 		log.Fatal(err)
 	}
