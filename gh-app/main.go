@@ -5,7 +5,6 @@ import (
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v55/github"
 	"github.com/joho/godotenv"
-	"golang.org/x/oauth2"
 	"io"
 	"log"
 	"net/http"
@@ -43,17 +42,11 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
 	switch e := event.(type) {
 	case *github.IssuesEvent:
-		handleIssuesEvent(ctx, client, e)
+		handleIssuesEvent(ctx, ghClient, e)
 	case *github.PullRequestEvent:
-		handlePullRequestEvent(ctx, client, e)
+		handlePullRequestEvent(ctx, ghClient, e)
 	default:
 		log.Printf("Unhandled event type: %s", github.WebHookType(r))
 	}
